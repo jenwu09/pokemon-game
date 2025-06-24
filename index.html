@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Gotta Catch 'em All</title>
+        <link rel="stylesheet" href="styles.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <div id="container">
+            <div id="left">
+                <!-- background + grasses -->
+                <img id="background" src="images/environment_forestbackground.png">
+                <img id="grass1" class="grass" src="images/grass.png">
+                <img id="grass2" class="grass" src="images/grass.png">
+                <img id="grass3" class="grass" src="images/grass.png">
+            </div>
+            <div id="right">
+                <!-- Textual component of game-->
+                <h1>Gotta Catch 'em All</h1>
+                <p>The goal of this game is for you catch as many pokemons as you can before you run out of pokeballs.
+                    Once you have no pokeballs left, it will be game over! <br>
+                    To play, simply select any grass patch to reveal what's behind it. Hoping luck is on your side, you will get 
+                    either 2 more pokeballs or catch a pokemon. If luck is not on your side, you will receive nothing.
+                </p>
+                <h2>Results</h2>
+                <p id="results"></p>
+                <p>Pokeballs left: <span id="pokeballs_left">5</span></p>
+                <p>Pokemon caught: <span id="pokemon_caught">0</span></p>
+                <!--Pokedex table and histogram-->
+                <div id="pokedex">
+                    <table>
+                        <tr>
+                            <th>Pokemon</th>
+                            <th>Count</th>
+                            <th>Histogram</th>
+                        </tr>
+                        <tr>
+                            <td>Pikachu</td>
+                            <td class="count">0</td>
+                            <td>
+                                <div class="histogram" id="pikachu_bar"> </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Bulbasaur</td>
+                            <td class="count">0</td>
+                            <td>
+                                <div class="histogram" id="bulbasaur_bar"> </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Charmander</td>
+                            <td class="count">0</td>
+                            <td>
+                                <div class="histogram" id="charmander_bar"> </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Eevee</td>
+                            <td class="count">0</td>
+                            <td>
+                                <div class="histogram" id="eevee_bar"> </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Squirtle</td>
+                            <td class="count">0</td>
+                            <td>
+                                <div class="histogram" id="squirtle_bar"> </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <!--Play Again button-->
+                <button id="button_playagain">Play Again</button>
+                <!-- Game Over message-->
+                <p id="game_over">Game Over!</p>
+                <!--show history button-->
+                <button id="history_button" style="display:none">Show History</button>
+                <button id="restart_button">Restart</button>
+            </div>
+            
+            <div id="history" style="display:none">
+                <h2>Result History</h2>
+                <ul id="history_list"></ul>
+                <button id="clear_history_button">Clear History</button>
+            </div>
+        </div>
+        <script>
+            //pokemon names, images, and keep trach of each pokemon caught
+            const pokemons = [
+                {name:'Pikachu', image:'images/pikachu.png', count: 0}, 
+                {name:'Bulbasaur', image:'images/bulbasaur.png', count: 0},
+                {name:'Charmander', image:'images/charmander.png', count: 0},
+                {name:'Eevee', image:'images/eevee.png', count: 0},
+                {name:'Squirtle', image:'images/squirtle.png', count: 0}
+            ]
+            // define all DOM elements that we plan on using
+            const grass_collection = document.querySelectorAll('.grass');
+            const results = document.getElementById('results');
+            const pokeballs_left = document.getElementById('pokeballs_left');
+            const pokemon_caught_num = document.getElementById('pokemon_caught');
+            const button_playagain = document.getElementById('button_playagain');
+            const game_over = document.getElementById('game_over');
+            //for feature 2
+            const pokedex = document.querySelector('#pokedex table');
+            const count_collection = document.querySelectorAll('.count');
+            const hist_collection = [
+                {poke:'Pikachu', bar: document.getElementById('pikachu_bar')}, 
+                {poke:'Bulbasaur', bar: document.getElementById('bulbasaur_bar')},
+                {poke:'Charmander', bar: document.getElementById('charmander_bar')},
+                {poke:'Eevee', bar: document.getElementById('eevee_bar')},
+                {poke:'Squirtle', bar: document.getElementById('squirtle_bar')}
+            ]
+            //for feature 1
+            const history_div = document.getElementById('history');
+            const history_button = document.getElementById('history_button');
+            const results_history = document.getElementById('history_list');
+            const clear_history_button = document.getElementById('clear_history_button');
+            const restart_button = document.getElementById('restart_button');
+            // variables to keep track of game state
+            let pokeballsLeft = 5;
+            let total_pokemon = 0;
+            let roundOver = false;
+            let feature_1_list = [];
+            //clicking on grass patches
+            for (let i = 0; i < grass_collection.length; i++) {
+                grass_collection[i].onclick = function(event) {
+                    if (roundOver == false) { 
+                    roundOver = true;
+                    // the user loses a pokeball
+                    pokeballsLeft -= 1;
+                    pokeballs_left.innerText = pokeballsLeft;
+                    // pick which option we should use for each grass patch clicked
+                    let chance = Math.random();
+                        // 33% of a pokemon
+                        if (chance > 0.66) {
+                            //find pokemon for corresponding index
+                            let pokemon_index = parseInt(Math.random() * pokemons.length);
+                            let current_pokemon = pokemons[pokemon_index];
+                            event.currentTarget.src = pokemons[pokemon_index].image;  
+                            //update specific pokemon count and total pokemon caught 
+                            current_pokemon.count++;      
+                            total_pokemon += 1;
+                            pokemon_caught_num.innerText = total_pokemon;
+                            results.innerText = 'You caught a ' + current_pokemon.name + '!';
+                            //for feature 2
+                            count_collection[pokemon_index].innerText = current_pokemon.count;
+                            //for feature 2: special message for all types caught
+                            if (all_types_caught()) {
+                                results.innerText += ' Congratulations! You’ve caught at least one of each Pokémon!';
+                            }
+                            //for feature 2: histogram updates
+                            hist_collection[pokemon_index].bar.style.width = `${current_pokemon.count * 20}px`;
+                            //for feature 1
+                            feature_1_list.push(`${current_pokemon.name} found`);
+                        }
+                        // 33% of 2 pokeballs 
+                        else if (chance > 0.33) {
+                            event.currentTarget.src = 'images/pokeballs.png';                            
+                            pokeballsLeft += 3;
+                            pokeballs_left.innerText = pokeballsLeft;
+                            results.style.display = 'block';
+                            results.innerText = 'You found 2 pokeballs!';
+                            //for feature 1
+                            feature_1_list.push('Pokeballs found');
+                        }
+                        // 33% of nothing
+                        else {
+                            event.currentTarget.src = '';
+                            results.style.display = 'block';
+                            results.innerText = 'You found nothing!';
+                            //for feature 1
+                            feature_1_list.push('Nothing found');
+                        }
+                        //Game over if no pokeballs left
+                        if (pokeballsLeft <= 0) {
+                            game_over.style.display = 'block';
+                            feature_1_list.push['Game over'];
+                            button_playagain.style.display = 'none';
+                            history_button.style.display = 'inline-block';
+                            restart_button.style.display = 'inline-block';
+                            //for feature 1
+                            feature_1_list.push('Game over');         
+                        }
+                        //if there's still pokeballs, show the reset button
+                        else {
+                            button_playagain.style.display = 'inline-block';  
+                            restart_button.style.display = 'inline-block';
+                        }
+                    } 
+                }           
+            }
+
+            // play again button 
+            button_playagain.addEventListener('click', function() {
+                // reset the grasses
+                reset_grass(); 
+                
+            });
+            //feature 1: show history
+            history_button.addEventListener('click', function() {
+                results_history.innerText = '';
+                for (let i = feature_1_list.length - 1; i >= 0; i--) {
+                    let element = document.createElement('li');
+                    element.innerText = feature_1_list[i];
+                    results_history.appendChild(element);
+                }
+                history_div.style.display = 'block';
+                clear_history_button.style.display = 'block';
+            });
+            //feature 1: clear history button event listener
+            clear_history_button.addEventListener('click', function() {
+                clear_history();
+            });
+            //restart game entirely button
+            restart_button.addEventListener('click', function() {
+                reset_grass();
+                reset_pokemon_counts();
+                feature_1_list.length = 0;
+                results_history.innerHTML = '';
+                game_over.style.display = 'none';
+                history_div.style.display = 'none';
+                history_button.style.display = 'none';
+            });
+            
+            //all specific functions
+            //reset grass patches function
+            function reset_grass() {
+                for (let i = 0; i < grass_collection.length; i++) {
+                    grass_collection[i].src = 'images/grass.png';
+                }
+                // hide the play again button
+                button_playagain.style.display = 'none';
+                //reset roundover variable
+                roundOver = false;
+            }
+            //feature 2 function to check if all types of pokemon were caught at least one for the message
+            function all_types_caught() {
+                let all_caught = true;
+                for (let i = 0; i < pokemons.length; i++) {
+                    if (pokemons[i].count === 0) {
+                        all_caught = false;
+                        break;
+                    }
+                }
+                return all_caught;
+            }
+            //feature 2: function to update histogram bars
+            function histogram_update(pokemon, bar) {
+                bar.style.width = `${pokemon.count * 10}px`;
+            }
+
+            //feature 1: clear history list
+            function clear_history() {
+                results_history.innerHTML = '';
+                feature_1_list.length = 0;
+            }
+
+            //feature 1: reset pokemon counts
+            function reset_pokemon_counts() {
+                for (let i = 0; i < pokemons.length; i++) {
+                    pokemons[i].count = 0;
+                    count_collection[i].innerText = 0;
+                    hist_collection[i].bar.style.width = '0px';
+                    pokeballsLeft = 5;
+                    total_pokemon = 0;
+                    pokeballs_left.innerText = pokeballsLeft;
+                    pokemon_caught_num.innerText = total_pokemon;
+                    results.innerText = '';
+                }
+            }
+        </script>
+    </body>
+</html>
